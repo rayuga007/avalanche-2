@@ -1,60 +1,56 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-//import "hardhat/console.sol";
-
 contract Assessment {
-    address payable public owner;
-    uint256 public balance;
+    address payable public fundsHolder;
+    uint256 public remainingBalance;
 
-    event Deposit(uint256 amount);
-    event Withdraw(uint256 amount);
+    event Deposit(address indexed depositor, uint256 amount);
+    event Withdraw(address indexed withdrawer, uint256 amount);
+    event Burn(address indexed burner, uint256 burnedAmount);
+    event Add(uint256 x, uint256 y, uint256 result);
+    event Multiply(uint256 x, uint256 y, uint256 result);
 
-    constructor(uint initBalance) payable {
-        owner = payable(msg.sender);
-        balance = initBalance;
+    constructor(uint256 initialBalance) payable {
+        fundsHolder = payable(msg.sender);
+        remainingBalance = initialBalance;
     }
 
-    function getBalance() public view returns(uint256){
-        return balance;
+    function getRemainingBalance() public view returns (uint256) {
+        return remainingBalance;
     }
 
-    function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
-
-        // make sure this is the owner
-        require(msg.sender == owner, "You are not the owner of this account");
-
-        // perform transaction
-        balance += _amount;
-
-        // assert transaction completed successfully
-        assert(balance == _previousBalance + _amount);
-
-        // emit the event
-        emit Deposit(_amount);
+    function deposit(uint256 depositAmount) public payable {
+        require(msg.sender == fundsHolder, "You are not the holder of this account");
+        remainingBalance += depositAmount;
+        emit Deposit(msg.sender, depositAmount);
     }
 
-    // custom error
-    error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
+    error InsufficientBalance(uint256 balance, uint256 withdrawalAmount);
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
-        if (balance < _withdrawAmount) {
-            revert InsufficientBalance({
-                balance: balance,
-                withdrawAmount: _withdrawAmount
-            });
+    function withdraw(uint256 withdrawalAmount) public {
+        require(msg.sender == fundsHolder, "You are not the holder of this account");
+        if (remainingBalance < withdrawalAmount) {
+            revert InsufficientBalance({ balance: remainingBalance, withdrawalAmount: withdrawalAmount });
         }
+        remainingBalance -= withdrawalAmount;
+        emit Withdraw(msg.sender, withdrawalAmount);
+    }
 
-        // withdraw the given amount
-        balance -= _withdrawAmount;
+    function burn(uint256 burnAmount) public {
+        require(msg.sender == fundsHolder, "You are not the holder of this account");
+        require(remainingBalance >= burnAmount, "Insufficient funds for burning");
+        remainingBalance -= burnAmount;
+        emit Burn(msg.sender, burnAmount);
+    }
 
-        // assert the balance is correct
-        assert(balance == (_previousBalance - _withdrawAmount));
+    function add(uint256 x, uint256 y) public {
+        uint256 result = x + y;
+        emit Add(x, y, result);
+    }
 
-        // emit the event
-        emit Withdraw(_withdrawAmount);
+    function multiply(uint256 x, uint256 y) public {
+        uint256 result = x * y;
+        emit Multiply(x, y, result);
     }
 }
