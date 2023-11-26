@@ -77,8 +77,6 @@ This repository contains a simple Ethereum smart contract and a React applicatio
 ### Note
 - MetaMask is required to interact with the smart contract.
 
-Feel free to explore and enhance this project!
-
 ## Author
 faizan khan
 
